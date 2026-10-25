@@ -1,13 +1,14 @@
-﻿using Microsoft.Extensions.Options;
-using CommBank.Models;
+﻿using CommBank.Models;
 using CommBank.Services;
 
 namespace CommBank.Tests.Fake;
 
 public class FakeGoalsService : IGoalsService
 {
-    List<Goal> _goals;
-    Goal _goal;
+    private readonly List<Goal> _goals;
+    private readonly Goal _goal;
+
+    public string? LastRequestedUserId { get; private set; }
 
     public FakeGoalsService(List<Goal> goals, Goal goal)
     {
@@ -15,21 +16,29 @@ public class FakeGoalsService : IGoalsService
         _goal = goal;
     }
 
-    public async Task<List<Goal>> GetAsync() =>
-        await Task.FromResult(_goals);
+    public Task<List<Goal>> GetAsync() =>
+        Task.FromResult(_goals);
 
-    public async Task<List<Goal>?> GetForUserAsync(string id) =>
-        await Task.FromResult(_goals);
+    public Task<List<Goal>?> GetForUserAsync(string id)
+    {
+        LastRequestedUserId = id;
 
-    public async Task<Goal?> GetAsync(string id) =>
-        await Task.FromResult(_goal);
+        List<Goal> result = _goals
+            .Where(goal => goal.UserId == id)
+            .ToList();
 
-    public async Task CreateAsync(Goal newGoal) =>
-        await Task.FromResult(true);
+        return Task.FromResult<List<Goal>?>(result);
+    }
 
-    public async Task UpdateAsync(string id, Goal updatedGoal) =>
-        await Task.FromResult(true);
+    public Task<Goal?> GetAsync(string id) =>
+        Task.FromResult<Goal?>(_goal);
 
-    public async Task RemoveAsync(string id) =>
-        await Task.FromResult(true);
+    public Task CreateAsync(Goal newGoal) =>
+        Task.CompletedTask;
+
+    public Task UpdateAsync(string id, Goal updatedGoal) =>
+        Task.CompletedTask;
+
+    public Task RemoveAsync(string id) =>
+        Task.CompletedTask;
 }
